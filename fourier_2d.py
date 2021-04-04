@@ -1,3 +1,4 @@
+#%%
 """
 @author: Zongyi Li
 This file is the Fourier Neural Operator for 2D problem such as the Darcy Flow discussed in Section 5.2 in the [paper](https://arxiv.org/pdf/2010.08895.pdf).
@@ -14,13 +15,14 @@ import matplotlib.pyplot as plt
 import operator
 from functools import reduce
 from functools import partial
-
+from torchinfo import summary
 from timeit import default_timer
 from utilities3 import *
 
 torch.manual_seed(0)
 np.random.seed(0)
 
+#%%
 #Complex multiplication
 def compl_mul2d(a, b):
     # (batch, in_channel, x,y ), (in_channel, out_channel, x,y) -> (batch, out_channel, x,y)
@@ -30,7 +32,7 @@ def compl_mul2d(a, b):
         op(a[..., 1], b[..., 0]) + op(a[..., 0], b[..., 1])
     ], dim=-1)
 
-
+#%%
 ################################################################
 # fourier layer
 ################################################################
@@ -54,7 +56,7 @@ class SpectralConv2d(nn.Module):
     def forward(self, x):
         batchsize = x.shape[0]
         #Compute Fourier coeffcients up to factor of e^(- something constant)
-        x_ft = torch.rfft(x, 2, normalized=True, onesided=True)
+        x_ft = torch.fft.rfft(x, 2, normalized=True, onesided=True)
 
         # Multiply relevant Fourier modes
         out_ft = torch.zeros(batchsize, self.in_channels,  x.size(-2), x.size(-1)//2 + 1, 2, device=x.device)
@@ -64,7 +66,7 @@ class SpectralConv2d(nn.Module):
             compl_mul2d(x_ft[:, :, -self.modes1:, :self.modes2], self.weights2)
 
         #Return to physical space
-        x = torch.irfft(out_ft, 2, normalized=True, onesided=True, signal_sizes=( x.size(-2), x.size(-1)))
+        x = torch.fft.irfft(out_ft, 2, normalized=True, onesided=True, signal_sizes=( x.size(-2), x.size(-1)))
         return x
 
 class SimpleBlock2d(nn.Module):
@@ -156,12 +158,13 @@ class Net2d(nn.Module):
             c += reduce(operator.mul, list(p.size()))
 
         return c
-
+#%%
 ################################################################
 # configs
 ################################################################
-TRAIN_PATH = 'data/piececonst_r421_N1024_smooth1.mat'
-TEST_PATH = 'data/piececonst_r421_N1024_smooth2.mat'
+TRAIN_PATH = '/media/scao/Data/Neural_PDE_dataset/Darcy_421/piececonst_r421_N1024_smooth1.mat'
+TEST_PATH = '/media/scao/Data/Neural_PDE_dataset/Darcy_421/piececonst_r421_N1024_smooth2.mat'
+
 
 ntrain = 1000
 ntest = 100
@@ -209,17 +212,23 @@ x_test = torch.cat([x_test.reshape(ntest,s,s,1), grid.repeat(ntest,1,1,1)], dim=
 
 train_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(x_train, y_train), batch_size=batch_size, shuffle=True)
 test_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(x_test, y_test), batch_size=batch_size, shuffle=False)
-
+#%%
 ################################################################
 # training and evaluation
 ################################################################
 model = Net2d(modes, width).cuda()
-print(model.count_params())
+
 
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-4)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=gamma)
 
 myloss = LpLoss(size_average=False)
+
+
+#%%
+x, y = next(iter(train_loader))
+summary(model, x.size(), device='cuda')
+#%%
 y_normalizer.cuda()
 for ep in range(epochs):
     model.train()
