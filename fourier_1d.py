@@ -3,7 +3,7 @@
 This file is the Fourier Neural Operator for 1D problem such as the (time-independent) Burgers equation discussed in Section 5.1 in the [paper](https://arxiv.org/pdf/2010.08895.pdf).
 """
 
-
+#%%
 import numpy as np
 import torch
 import torch.nn as nn
@@ -16,10 +16,10 @@ from functools import reduce
 from functools import partial
 from timeit import default_timer
 from utilities3 import *
-
+from torchinfo import summary
 torch.manual_seed(0)
 np.random.seed(0)
-
+#%%
 #Complex multiplication
 def compl_mul1d(a, b):
     # (batch, in_channel, x ), (in_channel, out_channel, x) -> (batch, out_channel, x)
@@ -146,7 +146,7 @@ class Net1d(nn.Module):
 
         return c
 
-
+#%%
 ################################################################
 #  configurations
 ################################################################
@@ -167,13 +167,13 @@ gamma = 0.5
 modes = 16
 width = 64
 
-
+#%%
 ################################################################
 # read data
 ################################################################
 
 # Data is of the shape (number of samples, grid size)
-dataloader = MatReader('data/burgers_data_R10.mat')
+dataloader = MatReader('/media/scao/Data/Neural_PDE_dataset/Burgers_R10/burgers_data_R10.mat')
 x_data = dataloader.read_field('a')[:,::sub]
 y_data = dataloader.read_field('u')[:,::sub]
 
@@ -190,12 +190,12 @@ x_test = torch.cat([x_test.reshape(ntest,s,1), grid.repeat(ntest,1,1)], dim=2)
 
 train_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(x_train, y_train), batch_size=batch_size, shuffle=True)
 test_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(x_test, y_test), batch_size=batch_size, shuffle=False)
-
+#%%
 # model
 model = Net1d(modes, width).cuda()
 print(model.count_params())
 
-
+#%%
 ################################################################
 # training and evaluation
 ################################################################
