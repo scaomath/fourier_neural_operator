@@ -96,8 +96,8 @@ class SimpleBlock1d(nn.Module):
 
     def forward(self, x):
 
-        x = self.fc0(x)
-        x = x.permute(0, 2, 1)
+        x = self.fc0(x) # (B, S, 2) -> (B, S, E)
+        x = x.permute(0, 2, 1) # (B, S, E) -> (B, E, S)
 
         x1 = self.conv0(x)
         x2 = self.w0(x)

@@ -170,14 +170,12 @@ ntrain = 1000
 ntest = 100
 
 batch_size = 20
-learning_rate = 0.001
 
 epochs = 500
 step_size = 100
 gamma = 0.5
 
-modes = 12
-width = 32
+
 
 r = 5
 h = int(((421 - 1)/r) + 1)
@@ -216,9 +214,13 @@ test_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(x_test,
 ################################################################
 # training and evaluation
 ################################################################
+modes = 12
+width = 32
 model = Net2d(modes, width).cuda()
 model.count_params()
 
+#%%
+learning_rate = 0.001
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-4)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=gamma)
 
