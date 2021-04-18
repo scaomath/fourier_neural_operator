@@ -1,0 +1,34 @@
+%% params
+% u0 = GRF1(s/2, 0, gamma, tau, sigma, "periodic");
+% s = 1024
+clear;
+m = 0;
+steps = 1024;
+N = steps/2;
+gamma = 2.5;
+tau = 7;
+sigma = 7^(2);
+
+const = 2*pi;
+my_eigs = sqrt(2)*(abs(sigma).*((const.*(1:N)').^2 + tau^2).^(-gamma/2));
+
+xi_alpha = randn(N,1);
+alpha = my_eigs.*xi_alpha;
+
+xi_beta = randn(N,1);
+beta = my_eigs.*xi_beta;
+a = alpha/2;
+b = -beta/2;
+
+c = [flipud(a) - flipud(b).*1i; m + 0*1i;a + b.*1i];
+%% make chebfun object
+uu0 = chebfun(c, [0 1], 'trig', 'coeffs');
+u0 = chebfun(@(t) uu0(t - 0.5), [0 1], 'trig');
+
+%%
+tspan = linspace(0,1,steps+1);
+S = spinop([0 1], tspan);
+S.lin = @(u) + visc*diff(u,2);
+S.nonlin = @(u) - 0.5*diff(u.^2);
+S.init = init;
+u = spin(S,s,1e-4,'plot','off'); 

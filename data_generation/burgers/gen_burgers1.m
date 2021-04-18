@@ -1,3 +1,4 @@
+%%
 % number of realizations to generate
 N = 1;
 
@@ -7,7 +8,7 @@ tau = 7;
 sigma = 7^(2);
 
 % viscosity
-visc = 1/1000;
+visc = 1/10;
 
 % grid size
 s = 1024;
@@ -20,7 +21,7 @@ if steps == 1
 else
     output = zeros(N, steps, s);
 end
-
+%%
 tspan = linspace(0,1,steps+1);
 x = linspace(0,1,s+1);
 for j=1:N
