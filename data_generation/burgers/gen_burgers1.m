@@ -1,4 +1,5 @@
 %%
+clear;
 % number of realizations to generate
 N = 1;
 
@@ -8,7 +9,7 @@ tau = 7;
 sigma = 7^(2);
 
 % viscosity
-visc = 1/10;
+visc = 1/1000;
 
 % grid size
 s = 1024;
@@ -41,3 +42,12 @@ for j=1:N
     
     disp(j);
 end
+
+%%
+close all;
+plot(input(end,:))
+hold on
+plot(squeeze(output(end,end,:)))
+legend('$u_0(x)$','$u(x, 1)$',...
+       'LOCATION','Best');
+set(gcf,'position',[100,500,800,500])
