@@ -2,7 +2,7 @@
 @author: Zongyi Li
 This file is the Fourier Neural Operator for 2D problem such as the Darcy Flow discussed in Section 5.2 in the [paper](https://arxiv.org/pdf/2010.08895.pdf).
 """
-
+#%%
 import numpy as np
 import torch
 import torch.nn as nn
@@ -21,7 +21,7 @@ from utilities3 import *
 torch.manual_seed(0)
 np.random.seed(0)
 
-
+#%%
 ################################################################
 # fourier layer
 ################################################################
@@ -130,12 +130,12 @@ class FNO2d(nn.Module):
         x = self.fc2(x)
         return x
 
-
+#%%
 ################################################################
 # configs
 ################################################################
-TRAIN_PATH = 'data/piececonst_r421_N1024_smooth1.mat'
-TEST_PATH = 'data/piececonst_r421_N1024_smooth2.mat'
+TRAIN_PATH = '/home/scao/Documents/ft-draft/data/piececonst_r421_N1024_smooth1.mat'
+TEST_PATH = '/home/scao/Documents/ft-draft/data/piececonst_r421_N1024_smooth2.mat'
 
 ntrain = 1000
 ntest = 100
@@ -154,6 +154,7 @@ r = 5
 h = int(((421 - 1)/r) + 1)
 s = h
 
+#%%
 ################################################################
 # load data and data normalization
 ################################################################
@@ -183,12 +184,13 @@ x_test = torch.cat([x_test.reshape(ntest,s,s,1), grid.repeat(ntest,1,1,1)], dim=
 
 train_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(x_train, y_train), batch_size=batch_size, shuffle=True)
 test_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(x_test, y_test), batch_size=batch_size, shuffle=False)
-
+#%%
 ################################################################
 # training and evaluation
 ################################################################
 model = FNO2d(modes, modes, width).cuda()
 print(count_params(model))
+#%%
 
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-4)
 scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=gamma)
@@ -231,3 +233,5 @@ for ep in range(epochs):
 
     t2 = default_timer()
     print(ep, t2-t1, train_l2, test_l2)
+
+# %%
