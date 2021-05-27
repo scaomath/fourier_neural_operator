@@ -131,7 +131,7 @@ sub = 1 #subsampling rate
 h = 2**13 // sub #total grid size divided by the subsampling rate
 s = h
 
-batch_size = 8
+batch_size = 4
 learning_rate = 0.001
 
 epochs = 100
