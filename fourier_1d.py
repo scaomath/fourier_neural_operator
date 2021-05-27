@@ -124,17 +124,17 @@ class FNO1d(nn.Module):
 ################################################################
 #  configurations
 ################################################################
-ntrain = 1000
+ntrain = 1024
 ntest = 100
 
-sub = 2**3 #subsampling rate
+sub = 1 #subsampling rate
 h = 2**13 // sub #total grid size divided by the subsampling rate
 s = h
 
-batch_size = 20
+batch_size = 8
 learning_rate = 0.001
 
-epochs = 500
+epochs = 100
 step_size = 100
 gamma = 0.5
 
@@ -147,7 +147,8 @@ width = 64
 ################################################################
 
 # Data is of the shape (number of samples, grid size)
-dataloader = MatReader('data/burgers_data_R10.mat')
+# dataloader = MatReader('data/burgers_data_R10.mat')
+dataloader = MatReader('/home/scao/Documents/ft-draft/data/burgers_data_R10.mat')
 x_data = dataloader.read_field('a')[:,::sub]
 y_data = dataloader.read_field('u')[:,::sub]
 
@@ -174,8 +175,10 @@ print(count_params(model))
 # training and evaluation
 ################################################################
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-4)
-scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=gamma)
-
+# scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=gamma)
+scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=learning_rate, 
+                        div_factor=1e4, final_div_factor=1e4,
+                        steps_per_epoch=len(train_loader), epochs=epochs)
 myloss = LpLoss(size_average=False)
 for ep in range(epochs):
     model.train()
@@ -196,8 +199,9 @@ for ep in range(epochs):
         optimizer.step()
         train_mse += mse.item()
         train_l2 += l2.item()
+        scheduler.step()
 
-    scheduler.step()
+    # scheduler.step()
     model.eval()
     test_l2 = 0.0
     with torch.no_grad():
@@ -224,7 +228,7 @@ with torch.no_grad():
         x, y = x.cuda(), y.cuda()
 
         out = model(x)
-        pred[index] = out
+        pred[index] = out.squeeze()
 
         test_l2 += myloss(out.view(1, -1), y.view(1, -1)).item()
         print(index, test_l2)
