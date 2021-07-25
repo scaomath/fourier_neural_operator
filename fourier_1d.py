@@ -49,7 +49,7 @@ class SpectralConv1d(nn.Module):
         x_ft = torch.fft.rfft(x)
 
         # Multiply relevant Fourier modes
-        out_ft = torch.zeros(batchsize, self.in_channels, x.size(-1)//2 + 1,  device=x.device, dtype=torch.cfloat)
+        out_ft = torch.zeros(batchsize, self.out_channels, x.size(-1)//2 + 1,  device=x.device, dtype=torch.cfloat)
         out_ft[:, :, :self.modes1] = self.compl_mul1d(x_ft[:, :, :self.modes1], self.weights1)
 
         #Return to physical space
@@ -158,7 +158,7 @@ x_test = x_data[-ntest:,:]
 y_test = y_data[-ntest:,:]
 
 # cat the locations information
-grid = np.linspace(0, 2*np.pi, s).reshape(1, s, 1)
+grid = np.linspace(0, 1, s).reshape(1, s, 1)
 grid = torch.tensor(grid, dtype=torch.float)
 x_train = torch.cat([x_train.reshape(ntrain,s,1), grid.repeat(ntrain,1,1)], dim=2)
 x_test = torch.cat([x_test.reshape(ntest,s,1), grid.repeat(ntest,1,1)], dim=2)
