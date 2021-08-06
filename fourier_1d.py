@@ -127,7 +127,7 @@ class FNO1d(nn.Module):
 ntrain = 1024
 ntest = 100
 
-sub = 1 #subsampling rate
+sub = 4 #subsampling rate
 h = 2**13 // sub #total grid size divided by the subsampling rate
 s = h
 
@@ -148,7 +148,7 @@ width = 64
 
 # Data is of the shape (number of samples, grid size)
 # dataloader = MatReader('data/burgers_data_R10.mat')
-dataloader = MatReader('/home/scao/Documents/ft-draft/data/burgers_data_R10.mat')
+dataloader = MatReader('/home/scao/Documents/ft-dev/data/burgers_data_R10.mat')
 x_data = dataloader.read_field('a')[:,::sub]
 y_data = dataloader.read_field('u')[:,::sub]
 
@@ -219,12 +219,22 @@ for ep in range(epochs):
     print(ep, t2-t1, train_mse, train_l2, test_l2)
 
 # torch.save(model, 'model/ns_fourier_burgers')
+dataloader = MatReader('/home/scao/Documents/ft-dev/data/burgers_data_R10.mat')
+x_data = dataloader.read_field('a')[:,::1]
+y_data = dataloader.read_field('u')[:,::1]
+
+x_test = x_data[-ntest:,:]
+y_test = y_data[-ntest:,:]
+s = 2**13
+grid = np.linspace(0, 2*np.pi, s).reshape(1, s, 1)
+grid = torch.tensor(grid, dtype=torch.float)
+x_test = torch.cat([x_test.reshape(ntest,s,1), grid.repeat(ntest,1,1)], dim=2)
 pred = torch.zeros(y_test.shape)
 index = 0
 test_loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(x_test, y_test), batch_size=1, shuffle=False)
 with torch.no_grad():
+    test_l2 = 0
     for x, y in test_loader:
-        test_l2 = 0
         x, y = x.cuda(), y.cuda()
 
         out = model(x)
@@ -234,4 +244,5 @@ with torch.no_grad():
         print(index, test_l2)
         index = index + 1
 
+print(test_l2/len(test_loader))
 # scipy.io.savemat('pred/burger_test.mat', mdict={'pred': pred.cpu().numpy()})
